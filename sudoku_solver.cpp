@@ -3,76 +3,87 @@
 
 using namespace std;
 
-#define N 9
-
-int grid[N][N] = {
-    {3, 0, 6, 5, 0, 8, 4, 0, 0},
-    {5, 2, 0, 0, 0, 0, 0, 0, 0},
-    {0, 8, 7, 0, 0, 0, 0, 3, 1},
-    {0, 0, 3, 0, 1, 0, 0, 8, 0},
-    {9, 0, 0, 8, 6, 3, 0, 0, 5},
-    {0, 5, 0, 0, 9, 0, 6, 0, 0},
-    {1, 3, 0, 0, 0, 0, 2, 5, 0},
-    {0, 0, 0, 0, 0, 0, 0, 7, 4},
-    {0, 0, 5, 2, 0, 6, 3, 0, 0}
-};
-
-bool isPresentInCol(int col, int num) {
-    for (int row = 0; row < N; row++)
-        if (grid[row][col] == num)
-            return true;
-    return false;
-}
-
-bool isPresentInRow(int row, int num) {
-    for (int col = 0; col < N; col++)
-        if (grid[row][col] == num)
-            return true;
-    return false;
-}
-
-bool isPresentInBox(int boxStartRow, int boxStartCol, int num) {
-    for (int row = 0; row < 3; row++)
-        for (int col = 0; col < 3; col++)
-            if (grid[row + boxStartRow][col + boxStartCol] == num)
-                return true;
-    return false;
-}
-
-bool findEmptyCell(int& row, int& col) {
-    for (row = 0; row < N; row++)
-        for (col = 0; col < N; col++)
-            if (grid[row][col] == 0)
-                return true;
-    return false;
-}
-
-bool isPlacementAllowed(int row, int col, int num) {
-    return !isPresentInRow(row, num) && !isPresentInCol(col, num) &&
-            !isPresentInBox(row - row % 3, col - col % 3, num);
-}
-
-bool solveSudoku() {
+bool solveSudoku(int sudoku[N][N]){
     int row, col;
-    if (!findEmptyCell(row, col))
+
+    // Do we have any empty cells left?
+    if (!findEmptyCell(sudoku, row, col))
         return true;
-    for (int num = 1; num <= 9; num++) {
-        if (isPlacementAllowed(row, col, num)) {
-            grid[row][col] = num;
-            if (solveSudoku())
+
+    for (int num = 1; num <= 9; num++)
+    {
+        // Can we place given number here?
+        if (isPlacementValid(sudoku, row, col, num))
+        {
+            // We guess num could fit here
+            sudoku[row][col] = num;
+
+            // Return, if success
+            if (solveSudoku(sudoku))
                 return true;
-            grid[row][col] = 0;
+
+            // Failed, our guess was wrong. Set cell back to 0 (empty) and start over again
+            sudoku[row][col] = EMPTY_CELL;
         }
     }
+
+    // Trigger backtracking!
     return false;
 }
 
-void printSolvedSudoku() {
+bool findEmptyCell(int sudoku[N][N],int& row, int& col){
+    for (row = 0; row < N; row++)
+        for (col = 0; col < N; col++)
+            if (sudoku[row][col] == EMPTY_CELL)
+                return true;
+    return false;
+}
+
+bool isUsedInRow(int sudoku[N][N], int row, int num){
+    for (int col = 0; col < N; col++)
+        if (sudoku[row][col] == num)
+            return true;
+    return false;
+}
+
+bool isUsedInCol(int sudoku[N][N], int col, int num){
+    for (int row = 0; row < N; row++)
+        if (sudoku[row][col] == num)
+            return true;
+    return false;
+}
+
+bool isUsedInBox(int sudoku[N][N], int boxStartRow, int boxStartCol, int num){
+    for (int row = 0; row < 3; row++)
+        for (int col = 0; col < 3; col++)
+            if (sudoku[row + boxStartRow] [col + boxStartCol] == num)
+                return true;
+    return false;
+}
+
+bool isPlacementValid(int sudoku[N][N], int row, int col, int num){
+    return !isUsedInRow(sudoku, row, num) &&
+            !isUsedInCol(sudoku, col, num) &&
+            !isUsedInBox(sudoku, row - row % 3, col - col % 3, num)
+            && sudoku[row][col] == EMPTY_CELL;
+}
+
+void fillTable(int table[N][N]){
+    for(int col = 0; col < N; col++){
+        for (int row = 0; row < N; row++){
+            int input;
+            cin >> input;
+            table[col][row] = input;
+        }
+    }
+}
+
+void printSudoku(int sudoku[N][N]) {
     for (int row = 0; row < N; row++) {
         for (int col = 0; col < N; col++) {
             if (col == 3 || col == 6)
                 cout << " | ";
-            cout << grid[row][col] << " ";
+            cout << sudoku[row][col] << " ";
         }
         if (row == 2 || row == 5) {
             cout << endl;
